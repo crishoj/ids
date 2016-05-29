@@ -285,6 +285,29 @@ static int ids_core_Camera_setcolor_mode(ids_core_Camera *self, PyObject *value,
     return 0;
 }
 
+static PyObject *ids_core_Camera_setimageformat(ids_core_Camera *self, PyObject *value, void *closure) {
+    int ret, format;
+    PyObject *exception;
+
+    format = (int) PyLong_AsLong(value);
+    exception = PyErr_Occurred();
+    if (exception) {
+        PyErr_SetString(exception, "Format must be an int or long");
+        return -1;
+    }
+
+    ret = is_ImageFormat(self->handle, IMGFRMT_CMD_SET_FORMAT, &format, 4);
+    switch (ret) {
+    case IS_SUCCESS:
+        return 0;
+        break;
+    default:
+        raise_general_error(self, ret);
+    }
+
+    return -1;
+}
+
 static PyObject *ids_core_Camera_getgain(ids_core_Camera *self, void *closure) {
     int gain = is_SetHardwareGain(self->handle, IS_GET_MASTER_GAIN,
             IS_IGNORE_PARAMETER, IS_IGNORE_PARAMETER, IS_IGNORE_PARAMETER);
@@ -778,6 +801,7 @@ PyGetSetDef ids_core_Camera_getseters[] = {
         "capturing images, and to free and reallocate memory\n"
         "after changing, as the new color mode may have a different\n"
         "bit depth.", NULL},
+    {"image_format", NULL, (setter) ids_core_Camera_setimageformat, "Image format ID (e.g. 33 for 4192x3104 snapshot of uEye XC)", NULL},
     {"gain", (getter) ids_core_Camera_getgain, (setter) ids_core_Camera_setgain, "Hardware gain (individual RGB gains not yet supported)", NULL},
     {"exposure", (getter) ids_core_Camera_getexposure, (setter) ids_core_Camera_setexposure, "Exposure time", NULL},
     {"auto_exposure", (getter) ids_core_Camera_getauto_exposure, (setter) ids_core_Camera_setauto_exposure, "Auto exposure", NULL},
